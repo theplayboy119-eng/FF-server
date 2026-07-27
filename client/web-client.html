@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>FF-Server Web Client (prototype)</title>
+    <style>canvas{background:#222;display:block;margin:20px auto;border:1px solid #444}</style>
+  </head>
+  <body>
+    <h3 style="text-align:center;color:#fff;background:#000;margin:0;padding:10px">FF-Server Web Client (prototype)</h3>
+    <canvas id="c" width="800" height="600"></canvas>
+    <script>
+      const ws = new WebSocket('ws://localhost:3000');
+      let roomId = null;
+      let playerId = null;
+      const name = 'webPlayer-' + Math.random().toString(36).slice(2,6);
+      ws.addEventListener('open', () => {
+        ws.send(JSON.stringify({ type: 'join', playerName: name }));
+      });
+      ws.addEventListener('message', (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === 'joined') {
+          roomId = msg.roomId;
+          console.log('joined', roomId);
+        } else if (msg.type === 'snapshot') {
+          render(msg.entities);
+        }
+      });
+
+      // send random move inputs every 500ms
+      setInterval(() => {
+        if (!roomId) return;
+        const input = { type: 'move', dx: (Math.random()-0.5)*5, dy: (Math.random()-0.5)*5 };
+        ws.send(JSON.stringify({ type: 'input', roomId, playerId: null, input }));
+      }, 500);
+
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d');
+      function render(entities) {
+        ctx.fillStyle = '#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        for (const e of entities) {
+          ctx.fillStyle = e.hp>50? '#0f0' : '#f00';
+          ctx.fillRect(400+e.x,300+e.y,10,10);
+          ctx.fillStyle = '#fff';
+          ctx.fillText(e.id, 400+e.x, 300+e.y-5);
+        }
+      }
+    </script>
+  </body>
+</html>

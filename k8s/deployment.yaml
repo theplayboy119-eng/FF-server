@@ -1,0 +1,32 @@
+/* Minimal k8s manifests (skeleton) */
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ff-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ff-server
+  template:
+    metadata:
+      labels:
+        app: ff-server
+    spec:
+      containers:
+        - name: ff-server
+          image: your-registry/ff-server:latest
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ff-server
+spec:
+  type: LoadBalancer
+  selector:
+    app: ff-server
+  ports:
+    - port: 3000
+      targetPort: 3000
