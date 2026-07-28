@@ -1,0 +1,40 @@
+syntax = "proto3";
+package ff;
+
+message JoinRequest {
+  string playerName = 1;
+  string sessionId = 2; // optional: for resume
+  bool matchmaking = 3;
+}
+
+message JoinResponse {
+  string roomId = 1;
+  string playerId = 2;
+  string sessionId = 3; // server-issued session id
+}
+
+message Input {
+  string roomId = 1;
+  string playerId = 2;
+  string inputType = 3;
+  double dx = 4;
+  double dy = 5;
+}
+
+message Entity {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  int32 hp = 4;
+}
+
+message Snapshot {
+  int32 tick = 1;
+  repeated Entity entities = 2;
+}
+
+// Generic envelope used on the wire
+message Envelope {
+  string type = 1; // e.g., "join", "joined", "input", "snapshot", "queued"
+  bytes payload = 2; // encoded message of the specific type above
+}
