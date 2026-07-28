@@ -115,19 +115,20 @@ export class RoomManager {
     return room;
   }
 
-  joinRandomRoom(ws: WebSocket, playerName: string) {
+  // Modified to return both roomId and playerId so clients can identify themselves
+  joinRandomRoom(ws: WebSocket, playerName: string): { roomId: string; playerId: string } {
     // find room with capacity (<8)
     for (const r of this.rooms.values()) {
       if (r.players.size < 8) {
         const pid = Math.random().toString(36).slice(2, 9);
         r.addPlayer({ id: pid, name: playerName, ws, x: 0, y: 0, hp: 100 });
-        return r.id;
+        return { roomId: r.id, playerId: pid };
       }
     }
     const newRoom = this.createRoom();
     const pid = Math.random().toString(36).slice(2, 9);
     newRoom.addPlayer({ id: pid, name: playerName, ws, x: 0, y: 0, hp: 100 });
-    return newRoom.id;
+    return { roomId: newRoom.id, playerId: pid };
   }
 
   routeInput(roomId: string, playerId: string, input: any) {

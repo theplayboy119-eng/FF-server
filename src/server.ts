@@ -52,8 +52,9 @@ wss.on("connection", (ws: WebSocket, req) => {
       const str = data.toString();
       const msg = JSON.parse(str);
       if (msg.type === "join") {
-        const roomId = roomManager.joinRandomRoom(ws, msg.playerName || `player-${clientId}`);
-        ws.send(JSON.stringify({ type: "joined", roomId }));
+        // joinRandomRoom now returns { roomId, playerId }
+        const res = roomManager.joinRandomRoom(ws, msg.playerName || `player-${clientId}`);
+        ws.send(JSON.stringify({ type: "joined", roomId: res.roomId, playerId: res.playerId }));
       } else if (msg.type === "input") {
         // route to room
         roomManager.routeInput(msg.roomId, msg.playerId, msg.input);

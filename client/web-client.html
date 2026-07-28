@@ -20,7 +20,8 @@
         const msg = JSON.parse(ev.data);
         if (msg.type === 'joined') {
           roomId = msg.roomId;
-          console.log('joined', roomId);
+          playerId = msg.playerId || null;
+          console.log('joined', roomId, playerId);
         } else if (msg.type === 'snapshot') {
           render(msg.entities);
         }
@@ -30,7 +31,7 @@
       setInterval(() => {
         if (!roomId) return;
         const input = { type: 'move', dx: (Math.random()-0.5)*5, dy: (Math.random()-0.5)*5 };
-        ws.send(JSON.stringify({ type: 'input', roomId, playerId: null, input }));
+        ws.send(JSON.stringify({ type: 'input', roomId, playerId: playerId, input }));
       }, 500);
 
       const canvas = document.getElementById('c');
