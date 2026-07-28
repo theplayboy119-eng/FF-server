@@ -17,11 +17,11 @@ const pluginManager = new PluginManager();
 const roomManager = new RoomManager(pluginManager);
 
 // HTTP: basic health
-app.get("/health", (req, res) => res.json({ ok: true }));
+app.get("/health", (req: any, res: any) => res.json({ ok: true }));
 
 // HTTP: register client module descriptor (the APK can POST here to announce modules)
 // Example body: { clientId: "abc", modules: [{ name: "shop", version: "1.0", endpoints: ["/shop/buy"] }] }
-app.post("/modules/register", (req, res) => {
+app.post("/modules/register", (req: any, res: any) => {
   try {
     const descriptor = req.body;
     if (!descriptor || !descriptor.clientId) return res.status(400).json({ error: "missing clientId" });
@@ -33,7 +33,7 @@ app.post("/modules/register", (req, res) => {
 });
 
 // HTTP: call plugin hook / admin operations
-app.post("/admin/plugin/reload", (req, res) => {
+app.post("/admin/plugin/reload", (req: any, res: any) => {
   try {
     pluginManager.reloadAll();
     res.json({ ok: true });
@@ -45,9 +45,9 @@ app.post("/admin/plugin/reload", (req, res) => {
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-wss.on("connection", (ws: WebSocket, req) => {
+wss.on("connection", (ws: WebSocket, req: any) => {
   const clientId = uuidv4();
-  ws.on("message", (data) => {
+  ws.on("message", (data: any) => {
     try {
       const str = data.toString();
       const msg = JSON.parse(str);
