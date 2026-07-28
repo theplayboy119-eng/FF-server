@@ -1,24 +1,27 @@
-# FF-Server (prototype)
+# FF-server
 
-Prototype authoritative game server scaffold (independent). This repository contains a basic Node.js + WebSocket authoritative server with a plugin/module system, a simple matchmaker/room implementation, and helper infra to run locally.
+Prototype authoritative game server (independent). This branch contains a more complete stack (Postgres, Redis, Auth, WebSocket server).
 
-Important: This project is independent and must not be used to connect to proprietary/official services. Designed to work with your independent client.
+Quick start (local with docker-compose):
 
-What is included
-- Express HTTP gateway + WebSocket realtime server
-- Room implementation with authoritative tick loop
-- Plugin manager (hot-reloadable) and HTTP endpoints to register client modules
-- Example web client to test realtime behavior
-- Dockerfile + docker-compose for local testing
+1. Copy env and edit if needed:
+   cp .env.example .env
 
-Run locally (dev)
-1. Install dependencies:
+2. Start services:
+   docker-compose up --build
+
+3. Apply DB migrations (inside the server container or locally with Node):
+   # from host (requires node & deps installed):
    npm install
-2. Start server in dev mode:
-   npm run dev
-3. Open client in browser: client/web-client.html
+   npm run migrate
 
-Run with Docker
-1. docker-compose up --build
+4. Server will be available at http://localhost:3000 and WebSocket at ws://localhost:3000
 
-Branch: feature/initial-scaffold
+API highlights:
+- POST /auth/register { username, password }
+- POST /auth/login { username, password }
+- GET /health
+- WebSocket protocol: JSON messages for join/input/snapshot
+
+Notes:
+- This is a prototype. Data persistence uses Postgres; Redis is used for future features (matchmaking, sessions).

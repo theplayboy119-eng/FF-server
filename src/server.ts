@@ -6,11 +6,22 @@ import bodyParser from "body-parser";
 import { v4 as uuidv4 } from "uuid";
 import { RoomManager } from "./rooms/GameRoom";
 import { PluginManager } from "./plugins/pluginManager";
+import dotenv from 'dotenv';
+import path from 'path';
+import authRouter from './auth/index';
+
+dotenv.config();
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
 app.use(bodyParser.json());
+
+// serve client static files
+app.use(express.static(path.join(__dirname, '../client')));
+
+// mount auth
+app.use('/auth', authRouter);
 
 // Simple in-memory stores for prototype
 const pluginManager = new PluginManager();
