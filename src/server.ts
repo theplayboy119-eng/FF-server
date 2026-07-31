@@ -6,20 +6,35 @@ const PORT = process.env.PORT || 10000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Suivi des tentatives par client/IP pour déclencher le passage forcé au lobby à la 4ème tentative
+const connectionAttempts = new Map<string, number>();
+const capturedRoutes = new Set<string>();
+
 // ==========================================
 // 0. FILET DE SÉCURITÉ & MÉMOIRE AUTONOME
 // ==========================================
-const capturedRoutes = new Set<string>();
-
 app.use((req: Request, res: Response, next: NextFunction) => {
     const routeKey = `${req.method} ${req.path}`;
     if (!capturedRoutes.has(routeKey)) {
         capturedRoutes.add(routeKey);
         console.log(`[NOUVELLE ROUTE DÉCOUVERTE] -> ${routeKey}`);
     }
-    console.log(`[REQUÊTE CAPTURÉE] Méthode: ${req.method} | URL: ${req.url} - IP: ${req.ip}`);
-    if (req.body && Object.keys(req.body).length > 0) {
-        console.log('Body:', JSON.stringify(req.body));
+
+    if (req.path !== '/') {
+        const clientIp = req.ip || 'unknown';
+        const attempts = (connectionAttempts.get(clientIp) || 0) + 1;
+        connectionAttempts.set(clientIp, attempts);
+
+        console.log(`\n================ ANALYSE AUTONOME [Tentative ${attempts}/4] ===============`);
+        console.log(`[REQUÊTE CAPTURÉE] Méthode: ${req.method} | URL: ${req.url} - IP: ${req.ip}`);
+        console.log(`[QUERY PARAMS]`, JSON.stringify(req.query));
+        if (req.body && Object.keys(req.body).length > 0) {
+            console.log('[BODY PAYLOAD]', JSON.stringify(req.body));
+        }
+
+        if (attempts >= 4) {
+            console.log(`⚠️ Seuil de 3 échecs atteint. Application de la règle du 4ème essai : Forçage de l'accès au lobby.`);
+        }
     }
     next();
 });
@@ -146,15 +161,36 @@ app.all('/auth/google/exchange', handleGoogleTokenExchange);
 // 5. ROUTE DE BASE
 // ==========================================
 app.get('/', (req: Request, res: Response) => {
-    res.send('Serveur Privé Free Fire - Actif 🚀');
+    res.send('Serveur Privé Free Fire - Actif & Autonome 🚀');
 });
 
 // ==========================================
-// 6. GESTIONNAIRE AUTONOME UNIVERSEL (CATCH-ALL FALLBACK)
+// 6. GESTIONNAIRE AUTONOME UNIVERSEL (CATCH-ALL FALLBACK & RÈGLE DU 4ÈME ESSAI)
 // ==========================================
-// Si aucune route précédente n'a répondu, ce bloc s'active automatiquement,
-// enregistre la route en mémoire et renvoie une réponse JSON par défaut pour éviter le crash du jeu.
-app.use((req: Request, res: Response) => {
+app.use(async (req: Request, res: Response) => {
+    const clientIp = req.ip || 'unknown';
+    const attempts = connectionAttempts.get(clientIp) || 1;
+
+    // Si on atteint la 4ème tentative, on force l'accès au lobby avec un jeton d'accès validé
+    if (attempts >= 4) {
+        console.log(`✅ [LOBBY DÉVERROUILLÉ] Attribution d'un accès complet au jeu pour ${req.path}`);
+        return res.status(200).json({
+            status: 0,
+            message: "Success",
+            code: 200,
+            account_id: "765432109",
+            open_id: "REAL_OPEN_ID_FF_2022",
+            access_token: "GARENA_REAL_VALID_TOKEN_2022_BYPASS",
+            token_type: "Bearer",
+            expires_in: 31536000,
+            lobby_ip: "127.0.0.1",
+            lobby_port: 10000,
+            forced_by_server: true
+        });
+    }
+
+    console.log(`❌ Échec de la liaison sur ${req.path}. Tentative ${attempts}/3 enregistrée.`);
+
     res.status(200).json({
         status: "success",
         code: 200,
@@ -162,7 +198,9 @@ app.use((req: Request, res: Response) => {
         path: req.path,
         open_id: "123456789",
         access_token: "AUTO_FALLBACK_TOKEN_2022",
-        expiry_time: 4102444800
+        expiry_time: 4102444800,
+        attempts_recorded: attempts,
+        remaining_attempts_before_lobby: 4 - attempts
     });
 });
 
