@@ -7,9 +7,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// 0. FILET DE SÉCURITÉ (CATCH-ALL LOGGER)
+// 0. FILET DE SÉCURITÉ & MÉMOIRE AUTONOME
 // ==========================================
+const capturedRoutes = new Set<string>();
+
 app.use((req: Request, res: Response, next: NextFunction) => {
+    const routeKey = `${req.method} ${req.path}`;
+    if (!capturedRoutes.has(routeKey)) {
+        capturedRoutes.add(routeKey);
+        console.log(`[NOUVELLE ROUTE DÉCOUVERTE] -> ${routeKey}`);
+    }
     console.log(`[REQUÊTE CAPTURÉE] Méthode: ${req.method} | URL: ${req.url} - IP: ${req.ip}`);
     if (req.body && Object.keys(req.body).length > 0) {
         console.log('Body:', JSON.stringify(req.body));
@@ -66,7 +73,7 @@ app.get('/v9.0/dialog/oauth', renderAuthPage);
 app.get('/auth/facebook', renderAuthPage);
 
 // ==========================================
-// 2. API ÉCHANGE DE JETON FACEBOOK (ARRIÈRE-PLAN)
+// 2. API ÉCHANGE DE JETON FACEBOOK
 // ==========================================
 const handleTokenExchange = (req: Request, res: Response) => {
     res.json({
@@ -77,13 +84,11 @@ const handleTokenExchange = (req: Request, res: Response) => {
     });
 };
 
-app.post('/api/auth/facebook/exchange', handleTokenExchange);
-app.get('/api/auth/facebook/exchange', handleTokenExchange);
-app.post('/auth/facebook/exchange', handleTokenExchange);
-app.get('/auth/facebook/exchange', handleTokenExchange);
+app.all('/api/auth/facebook/exchange', handleTokenExchange);
+app.all('/auth/facebook/exchange', handleTokenExchange);
 
 // ==========================================
-// 3. API MODE INVITÉ (GUEST REGISTRATION & GRANT)
+// 3. API MODE INVITÉ
 // ==========================================
 const handleGuestAuth = (req: Request, res: Response) => {
     res.json({
@@ -94,17 +99,13 @@ const handleGuestAuth = (req: Request, res: Response) => {
     });
 };
 
-app.post('/api/guest/register', handleGuestAuth);
-app.get('/api/guest/register', handleGuestAuth);
-app.post('/api/auth/guest/grant', handleGuestAuth);
-app.get('/api/auth/guest/grant', handleGuestAuth);
-app.post('/v1/guest/login', handleGuestAuth);
-app.get('/v1/guest/login', handleGuestAuth);
-app.post('/auth/guest', handleGuestAuth);
-app.get('/auth/guest', handleGuestAuth);
+app.all('/api/guest/register', handleGuestAuth);
+app.all('/api/auth/guest/grant', handleGuestAuth);
+app.all('/v1/guest/login', handleGuestAuth);
+app.all('/auth/guest', handleGuestAuth);
 
 // ==========================================
-// 4. API AUTHENTIFICATION GOOGLE OAUTH
+// 4. API GOOGLE OAUTH
 // ==========================================
 const handleGoogleAuth = (req: Request, res: Response) => {
     const redirectUri = (req.query.redirect_uri as string) || 'intent://success#Intent;scheme=garena;end';
@@ -138,10 +139,8 @@ const handleGoogleTokenExchange = (req: Request, res: Response) => {
     });
 };
 
-app.post('/api/auth/google/exchange', handleGoogleTokenExchange);
-app.get('/api/auth/google/exchange', handleGoogleTokenExchange);
-app.post('/auth/google/exchange', handleGoogleTokenExchange);
-app.get('/auth/google/exchange', handleGoogleTokenExchange);
+app.all('/api/auth/google/exchange', handleGoogleTokenExchange);
+app.all('/auth/google/exchange', handleGoogleTokenExchange);
 
 // ==========================================
 // 5. ROUTE DE BASE
@@ -151,7 +150,24 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // ==========================================
-// 6. DÉMARRAGE DU SERVEUR (CORRIGÉ POUR RENDER)
+// 6. GESTIONNAIRE AUTONOME UNIVERSEL (CATCH-ALL FALLBACK)
+// ==========================================
+// Si aucune route précédente n'a répondu, ce bloc s'active automatiquement,
+// enregistre la route en mémoire et renvoie une réponse JSON par défaut pour éviter le crash du jeu.
+app.use((req: Request, res: Response) => {
+    res.status(200).json({
+        status: "success",
+        code: 200,
+        message: "Auto-responded by Autonomous Private Server",
+        path: req.path,
+        open_id: "123456789",
+        access_token: "AUTO_FALLBACK_TOKEN_2022",
+        expiry_time: 4102444800
+    });
+});
+
+// ==========================================
+// 7. DÉMARRAGE DU SERVEUR
 // ==========================================
 const server = app.listen(Number(PORT), () => {
     console.log(`Serveur en écoute sur le port ${PORT}`);
@@ -159,4 +175,4 @@ const server = app.listen(Number(PORT), () => {
 
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 120000;
-         
+        
