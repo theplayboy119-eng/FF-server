@@ -150,7 +150,13 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Serveur Privé Free Fire - Actif 🚀');
 });
 
-app.listen(Number(PORT), '0.0.0.0', () => {
+// ==========================================
+// 6. DÉMARRAGE DU SERVEUR (CORRIGÉ POUR RENDER)
+// ==========================================
+const server = app.listen(Number(PORT), () => {
     console.log(`Serveur en écoute sur le port ${PORT}`);
 });
-        
+
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 120000;
+         
