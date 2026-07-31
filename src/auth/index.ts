@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Route d'initialisation de la connexion Facebook (/auth/facebook)
-router.get('/facebook', (req: Request, res: Response) => {
+// Route principale qui affiche le preview du serveur avec le bouton bleu
+router.get(['/facebook', '/', '/login'], (req: Request, res: Response) => {
     const htmlContent = 
         '<!DOCTYPE html>' +
         '<html lang="fr">' +
@@ -11,53 +11,41 @@ router.get('/facebook', (req: Request, res: Response) => {
         '<meta charset="UTF-8">' +
         '<title>Connexion Facebook</title>' +
         '<style>' +
-        'body { background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }' +
-        '.box { max-width: 350px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }' +
-        'h3 { color: #1877F2; }' +
-        'p { color: #cccccc; font-size: 14px; }' +
+        'body { background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center; margin: 0; padding-top: 40px; }' +
+        '.modal { background: #1e1e1e; max-width: 350px; margin: 0 auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }' +
+        'h3 { color: #4CAF50; margin-bottom: 10px; }' +
+        'p { color: #cccccc; font-size: 13px; line-height: 1.4; margin-bottom: 20px; }' +
+        '.btn-fb { display: block; width: 100%; background: #1877F2; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; box-sizing: border-box; }' +
+        '.loader { display: none; margin-top: 15px; color: #4CAF50; font-size: 13px; font-weight: bold; }' +
         '</style>' +
         '</head>' +
         '<body>' +
-        '<div class="box">' +
-        '<h3>Authentification en cours...</h3>' +
-        '<p>Validation sécurisée avec le serveur privé.</p>' +
-        '<script>' +
-        'setTimeout(function() { window.location.href = "/auth/facebook/success"; }, 1000);' +
-        '</script>' +
+        '<div class="modal">' +
+        '<h3>Vérification Réussie !</h3>' +
+        '<p>Le serveur privé a validé votre accès. Veuillez lier un compte Facebook actif pour vous connecter et accéder au lobby du jeu.</p>' +
+        '<a href="#" class="btn-fb" id="loginBtn" onclick="triggerSuccess(event)">Se connecter avec Facebook</a>' +
+        '<div class="loader" id="loaderText">Connexion en cours, redirection...</div>' +
         '</div>' +
+        '<script>' +
+        'function triggerSuccess(e) {' +
+        '  e.preventDefault();' +
+        '  document.getElementById("loginBtn").style.display = "none";' +
+        '  document.getElementById("loaderText").style.display = "block";' +
+        '  setTimeout(function() {' +
+        '    window.location.href = "freefire://login?access_token=EAAG_FAKE_FACEBOOK_TOKEN_FF2022&status=success&code=200";' +
+        '  }, 800);' +
+        '}' +
+        '</script>' +
         '</body>' +
         '</html>';
 
     res.send(htmlContent);
 });
 
-// Route de succès après liaison (/auth/facebook/success)
+// Route de secours au cas où l'APK fait une requête de redirection spécifique
 router.get('/facebook/success', (req: Request, res: Response) => {
-    const successHtml = 
-        '<!DOCTYPE html>' +
-        '<html lang="fr">' +
-        '<head>' +
-        '<meta charset="UTF-8">' +
-        '<title>Succès</title>' +
-        '<style>' +
-        'body { background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }' +
-        'h3 { color: #4CAF50; }' +
-        'p { color: #b0b0b0; font-size: 14px; }' +
-        '</style>' +
-        '</head>' +
-        '<body>' +
-        '<h3>Connexion Réussie !</h3>' +
-        '<p>Redirection vers le lobby...</p>' +
-        '<script>' +
-        'setTimeout(function() { ' +
-        '  window.location.href = "freefire://login?token=fake_private_server_token_12345&status=success"; ' +
-        '}, 1000);' +
-        '</script>' +
-        '</body>' +
-        '</html>';
-
-    res.send(successHtml);
+    res.redirect("freefire://login?access_token=EAAG_FAKE_FACEBOOK_TOKEN_FF2022&status=success&code=200");
 });
 
 export default router;
-        
+           
