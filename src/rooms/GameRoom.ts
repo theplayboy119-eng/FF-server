@@ -11,13 +11,21 @@ type Player = {
 };
 
 export class RoomManager {
-  private rooms: Map<string, { id: string; players: Map<string, Player> }> = new Map();
+  private rooms: Map<string, { id: string; players: Map<string, Player>; addPlayer: (player: Player) => void }> = new Map();
 
   constructor() {}
 
   public createRoom() {
     const roomId = Math.random().toString(36).slice(2, 9);
-    const room = { id: roomId, players: new Map<string, Player>() };
+    
+    const room = {
+      id: roomId,
+      players: new Map<string, Player>(),
+      addPlayer(player: Player) {
+        this.players.set(player.id, player);
+      }
+    };
+
     this.rooms.set(roomId, room);
     return room;
   }
@@ -26,13 +34,15 @@ export class RoomManager {
     for (const r of this.rooms.values()) {
       if (r.players.size < 8) {
         const pid = Math.random().toString(36).slice(2, 9);
-        r.players.set(pid, { id: pid, name: playerName, ws, x: 0, y: 0, hp: 100, sessionId });
+        const player: Player = { id: pid, name: playerName, ws, x: 0, y: 0, hp: 100, sessionId };
+        r.addPlayer(player);
         return { roomId: r.id, playerId: pid };
       }
     }
     const newRoom = this.createRoom();
     const pid = Math.random().toString(36).slice(2, 9);
-    newRoom.players.set(pid, { id: pid, name: playerName, ws, x: 0, y: 0, hp: 100, sessionId });
+    const player: Player = { id: pid, name: playerName, ws, x: 0, y: 0, hp: 100, sessionId };
+    newRoom.addPlayer(player);
     return { roomId: newRoom.id, playerId: pid };
   }
 
@@ -47,4 +57,4 @@ export class RoomManager {
     }
     return null;
   }
-          }
+      }
