@@ -6,8 +6,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 1. Page Web OAuth pour la WebView de l'APK
 const renderAuthPage = (req: Request, res: Response) => {
-    // Récupération dynamique des paramètres OAuth envoyés par l'APK
     const redirectUri = (req.query.redirect_uri as string) || 'fbconnect://success';
     const state = (req.query.state as string) || '';
 
@@ -39,7 +39,7 @@ const renderAuthPage = (req: Request, res: Response) => {
         '  document.getElementById("loginBtn").style.display = "none";' +
         '  document.getElementById("loaderText").style.display = "block";' +
         '  setTimeout(function() {' +
-        '    window.location.href = "' + redirectUri + '#access_token=EAAG_FAKE_TOKEN_FF2022&state=' + encodeURIComponent(state) + '&expires_in=5184000";' +
+        '    window.location.href = "' + redirectUri + '?access_token=EAAG_FAKE_TOKEN_FF2022&state=' + encodeURIComponent(state) + '&code=200";' +
         '  }, 600);' +
         '}' +
         '</script>' +
@@ -49,8 +49,26 @@ const renderAuthPage = (req: Request, res: Response) => {
     res.send(htmlContent);
 };
 
+// Routes pour l'interface WebView
 app.get('/v9.0/dialog/oauth', renderAuthPage);
 app.get('/auth/facebook', renderAuthPage);
+
+// 2. Réponse JSON pour l'échange de jeton en arrière-plan (requis par FBAuthRequestHandler)
+const handleTokenExchange = (req: Request, res: Response) => {
+    res.json({
+        open_id: "76543210",
+        access_token: "EAAG_FAKE_TOKEN_FF2022",
+        expiry_time: 4102444800,
+        platform: 1
+    });
+};
+
+app.post('/api/auth/facebook/exchange', handleTokenExchange);
+app.get('/api/auth/facebook/exchange', handleTokenExchange);
+app.post('/auth/facebook/exchange', handleTokenExchange);
+app.get('/auth/facebook/exchange', handleTokenExchange);
+
+// Route de base de test
 app.get('/', (req: Request, res: Response) => {
     res.send('Serveur Privé Free Fire - Actif 🚀');
 });
