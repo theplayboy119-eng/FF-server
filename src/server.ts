@@ -1,10 +1,22 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ==========================================
+// 0. FILET DE SÉCURITÉ (CATCH-ALL LOGGER)
+// ==========================================
+// Affiche absolument TOUTES les requêtes entrantes pour le debug en direct
+app.use((req: Request, res: Response, next: NextFunction) => {
+    console.log(`[REQUÊTE CAPTURÉE] Méthode: ${req.method} | URL: ${req.url} - IP: ${req.ip}`);
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log('Body:', JSON.stringify(req.body));
+    }
+    next();
+});
 
 // ==========================================
 // 1. PAGE WEB OAUTH (FACEBOOK)
