@@ -9,7 +9,6 @@ app.use(express.urlencoded({ extended: true }));
 // ==========================================
 // 0. FILET DE SÉCURITÉ (CATCH-ALL LOGGER)
 // ==========================================
-// Affiche absolument TOUTES les requêtes entrantes pour le debug en direct
 app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`[REQUÊTE CAPTURÉE] Méthode: ${req.method} | URL: ${req.url} - IP: ${req.ip}`);
     if (req.body && Object.keys(req.body).length > 0) {
@@ -105,7 +104,47 @@ app.post('/auth/guest', handleGuestAuth);
 app.get('/auth/guest', handleGuestAuth);
 
 // ==========================================
-// 4. ROUTE DE BASE
+// 4. API AUTHENTIFICATION GOOGLE OAUTH
+// ==========================================
+const handleGoogleAuth = (req: Request, res: Response) => {
+    const redirectUri = (req.query.redirect_uri as string) || 'intent://success#Intent;scheme=garena;end';
+    
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Connexion Google Réussie</title></head>
+        <body style="background:#121212; color:white; text-align:center; padding-top:50px; font-family:sans-serif;">
+            <h2>Connexion Google validée !</h2>
+            <p>Redirection vers le jeu en cours...</p>
+            <script>
+                setTimeout(function() {
+                    window.location.href = "${redirectUri}?code=200&access_token=GOOGLE_FAKE_TOKEN_2022";
+                }, 1000);
+            </script>
+        </body>
+        </html>
+    `);
+};
+
+app.get('/auth/google/callback', handleGoogleAuth);
+app.get('/api/auth/google/callback', handleGoogleAuth);
+
+const handleGoogleTokenExchange = (req: Request, res: Response) => {
+    res.json({
+        open_id: "987654321",
+        access_token: "GOOGLE_FAKE_TOKEN_2022",
+        expiry_time: 4102444800,
+        platform: 2
+    });
+};
+
+app.post('/api/auth/google/exchange', handleGoogleTokenExchange);
+app.get('/api/auth/google/exchange', handleGoogleTokenExchange);
+app.post('/auth/google/exchange', handleGoogleTokenExchange);
+app.get('/auth/google/exchange', handleGoogleTokenExchange);
+
+// ==========================================
+// 5. ROUTE DE BASE
 // ==========================================
 app.get('/', (req: Request, res: Response) => {
     res.send('Serveur Privé Free Fire - Actif 🚀');
