@@ -7,6 +7,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const renderAuthPage = (req: Request, res: Response) => {
+    // Récupération dynamique des paramètres OAuth envoyés par l'APK
+    const redirectUri = (req.query.redirect_uri as string) || 'fbconnect://success';
+    const state = (req.query.state as string) || '';
+
     const htmlContent = 
         '<!DOCTYPE html>' +
         '<html lang="fr">' +
@@ -35,7 +39,7 @@ const renderAuthPage = (req: Request, res: Response) => {
         '  document.getElementById("loginBtn").style.display = "none";' +
         '  document.getElementById("loaderText").style.display = "block";' +
         '  setTimeout(function() {' +
-        '    window.location.href = "freefire://login?access_token=EAAG_FAKE_FACEBOOK_TOKEN_FF2022&status=success&code=200";' +
+        '    window.location.href = "' + redirectUri + '#access_token=EAAG_FAKE_TOKEN_FF2022&state=' + encodeURIComponent(state) + '&expires_in=5184000";' +
         '  }, 600);' +
         '}' +
         '</script>' +
@@ -54,4 +58,4 @@ app.get('/', (req: Request, res: Response) => {
 app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Serveur en écoute sur le port ${PORT}`);
 });
-      
+        
