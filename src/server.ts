@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import dotenv from 'dotenv';
-import authRouter from './auth'; // Importation du routeur d'authentification
+import authRouter from './auth';
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -21,9 +21,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// ROUTE PRINCIPALE (Page d'accueil / Lobby)
+// ROUTE PRINCIPALE (Page de vérification & Bouton Facebook)
 // ==========================================
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="fr">
@@ -91,14 +91,12 @@ app.get('/', (req, res) => {
 // ==========================================
 // MONTAGE DES ROUTES D'AUTHENTIFICATION
 // ==========================================
-// Toutes les routes définies dans src/auth/index.ts seront préfixées par /auth
-// Le bouton du formulaire ci-dessus enverra donc vers /auth/facebook
 app.use('/auth', authRouter);
 
 // ==========================================
 // CONFIGURATION SOCKET.IO
 // ==========================================
-io.on('connection', (socket) => {
+io.on('connection', (socket: Socket) => {
   console.log(`Un client s'est connecté : ${socket.id}`);
 
   socket.on('disconnect', () => {
