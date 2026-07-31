@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Intercepte toutes les variantes de l'URL de login de l'APK (y compris avec les query parameters de luna-corp)
-router.get(['/facebook', '/', '/auth/facebook', '/auth/facebook/'], (req: Request, res: Response) => {
+// Intercepte la route exacte appelée par l'APK moddé pour le login Facebook
+router.get('/v9.0/dialog/oauth', (req: Request, res: Response) => {
     const htmlContent = 
         '<!DOCTYPE html>' +
         '<html lang="fr">' +
