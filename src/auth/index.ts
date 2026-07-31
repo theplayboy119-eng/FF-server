@@ -49,7 +49,9 @@ router.get('/facebook/success', (req: Request, res: Response) => {
         '<h3>Compte lié avec succès !</h3>' +
         '<p>Redirection vers le jeu en cours...</p>' +
         '<script>' +
-        'setTimeout(function() { window.location.href = "freefire://"; }, 1000);' +
+        'setTimeout(function() { ' +
+        '  window.location.href = "freefire://login?token=fake_private_server_token_12345&status=success"; ' +
+        '}, 1000);' +
         '</script>' +
         '</body>' +
         '</html>';
