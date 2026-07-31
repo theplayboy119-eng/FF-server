@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
+import authRouter from './auth'; // Importation du routeur d'authentification
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -20,10 +21,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// NOUVELLES ROUTES : Vérification & Liaison Facebook
+// ROUTE PRINCIPALE (Page d'accueil / Lobby)
 // ==========================================
-
-// Route principale (Page de vérification et bouton Facebook)
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -89,42 +88,16 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Route gérant l'action après le clic sur le bouton Facebook
-app.get('/auth/facebook', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-            <meta charset="UTF-8">
-            <title>Liaison en cours...</title>
-            <style>
-                body { 
-                    background-color: #121212; 
-                    color: white; 
-                    font-family: Arial, sans-serif; 
-                    text-align: center; 
-                    padding-top: 50px; 
-                }
-                h3 { color: #4CAF50; }
-            </style>
-        </head>
-        <body>
-            <h3>Compte Facebook lié avec succès !</h3>
-            <p>Accès autorisé. Chargement du lobby en cours...</p>
-            <script>
-                setTimeout(function() {
-                    window.location.href = "/";
-                }, 2000);
-            </script>
-        </body>
-        </html>
-    `);
-});
+// ==========================================
+// MONTAGE DES ROUTES D'AUTHENTIFICATION
+// ==========================================
+// Toutes les routes définies dans src/auth/index.ts seront préfixées par /auth
+// Le bouton du formulaire ci-dessus enverra donc vers /auth/facebook
+app.use('/auth', authRouter);
 
 // ==========================================
-// CONFIGURATION SOCKET.IO & WEBSOCKETS EXISTANTE
+// CONFIGURATION SOCKET.IO
 // ==========================================
-
 io.on('connection', (socket) => {
   console.log(`Un client s'est connecté : ${socket.id}`);
 
@@ -138,4 +111,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Serveur démarré et en écoute sur le port ${PORT}`);
 });
-  
