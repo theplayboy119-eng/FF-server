@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Route principale qui affiche le preview du serveur avec le bouton bleu
-router.get(['/facebook', '/', '/login'], (req: Request, res: Response) => {
+// Intercepte toutes les variantes de l'URL de login de l'APK (y compris avec les query parameters de luna-corp)
+router.get(['/facebook', '/', '/auth/facebook', '/auth/facebook/'], (req: Request, res: Response) => {
     const htmlContent = 
         '<!DOCTYPE html>' +
         '<html lang="fr">' +
@@ -24,7 +24,7 @@ router.get(['/facebook', '/', '/login'], (req: Request, res: Response) => {
         '<h3>Vérification Réussie !</h3>' +
         '<p>Le serveur privé a validé votre accès. Veuillez lier un compte Facebook actif pour vous connecter et accéder au lobby du jeu.</p>' +
         '<a href="#" class="btn-fb" id="loginBtn" onclick="triggerSuccess(event)">Se connecter avec Facebook</a>' +
-        '<div class="loader" id="loaderText">Connexion en cours, redirection...</div>' +
+        '<div class="loader" id="loaderText">Connexion en cours, redirection vers le lobby...</div>' +
         '</div>' +
         '<script>' +
         'function triggerSuccess(e) {' +
@@ -33,7 +33,7 @@ router.get(['/facebook', '/', '/login'], (req: Request, res: Response) => {
         '  document.getElementById("loaderText").style.display = "block";' +
         '  setTimeout(function() {' +
         '    window.location.href = "freefire://login?access_token=EAAG_FAKE_FACEBOOK_TOKEN_FF2022&status=success&code=200";' +
-        '  }, 800);' +
+        '  }, 600);' +
         '}' +
         '</script>' +
         '</body>' +
@@ -42,10 +42,5 @@ router.get(['/facebook', '/', '/login'], (req: Request, res: Response) => {
     res.send(htmlContent);
 });
 
-// Route de secours au cas où l'APK fait une requête de redirection spécifique
-router.get('/facebook/success', (req: Request, res: Response) => {
-    res.redirect("freefire://login?access_token=EAAG_FAKE_FACEBOOK_TOKEN_FF2022&status=success&code=200");
-});
-
 export default router;
-           
+        
