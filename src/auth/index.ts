@@ -3,11 +3,9 @@ import express, { Request, Response } from 'express';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware pour parser le JSON si besoin
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Fonction mutualisée pour générer la page de connexion
 const renderAuthPage = (req: Request, res: Response) => {
     const htmlContent = 
         '<!DOCTYPE html>' +
@@ -47,16 +45,13 @@ const renderAuthPage = (req: Request, res: Response) => {
     res.send(htmlContent);
 };
 
-// 1. Route exacte appelée par le SDK Facebook patché de l'APK (depuis ServerProtocol.smali)
 app.get('/v9.0/dialog/oauth', renderAuthPage);
-
-// 2. Routes de secours pour les tests sur navigateur
 app.get('/auth/facebook', renderAuthPage);
 app.get('/', (req: Request, res: Response) => {
     res.send('Serveur Privé Free Fire - Actif 🚀');
 });
 
-// Démarrage du serveur
 app.listen(PORT, () => {
     console.log(`Serveur en écoute sur le port ${PORT}`);
 });
+        
