@@ -6,7 +6,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 1. Page Web OAuth pour la WebView de l'APK
+// ==========================================
+// 1. PAGE WEB OAUTH (FACEBOOK)
+// ==========================================
 const renderAuthPage = (req: Request, res: Response) => {
     const redirectUri = (req.query.redirect_uri as string) || 'fbconnect://success';
     const state = (req.query.state as string) || '';
@@ -49,11 +51,12 @@ const renderAuthPage = (req: Request, res: Response) => {
     res.send(htmlContent);
 };
 
-// Routes pour l'interface WebView
 app.get('/v9.0/dialog/oauth', renderAuthPage);
 app.get('/auth/facebook', renderAuthPage);
 
-// 2. Réponse JSON pour l'échange de jeton en arrière-plan (requis par FBAuthRequestHandler)
+// ==========================================
+// 2. API ÉCHANGE DE JETON FACEBOOK (ARRIÈRE-PLAN)
+// ==========================================
 const handleTokenExchange = (req: Request, res: Response) => {
     res.json({
         open_id: "76543210",
@@ -68,7 +71,30 @@ app.get('/api/auth/facebook/exchange', handleTokenExchange);
 app.post('/auth/facebook/exchange', handleTokenExchange);
 app.get('/auth/facebook/exchange', handleTokenExchange);
 
-// Route de base de test
+// ==========================================
+// 3. API MODE INVITÉ (GUEST REGISTRATION & GRANT)
+// ==========================================
+const handleGuestAuth = (req: Request, res: Response) => {
+    res.json({
+        open_id: "123456789",
+        access_token: "GUEST_TOKEN_2022_FAKE",
+        refresh_token: "GUEST_REFRESH_TOKEN_FAKE",
+        expiry_time: 4102444800
+    });
+};
+
+app.post('/api/guest/register', handleGuestAuth);
+app.get('/api/guest/register', handleGuestAuth);
+app.post('/api/auth/guest/grant', handleGuestAuth);
+app.get('/api/auth/guest/grant', handleGuestAuth);
+app.post('/v1/guest/login', handleGuestAuth);
+app.get('/v1/guest/login', handleGuestAuth);
+app.post('/auth/guest', handleGuestAuth);
+app.get('/auth/guest', handleGuestAuth);
+
+// ==========================================
+// 4. ROUTE DE BASE
+// ==========================================
 app.get('/', (req: Request, res: Response) => {
     res.send('Serveur Privé Free Fire - Actif 🚀');
 });
