@@ -19,10 +19,10 @@ router.get('/facebook', (req: Request, res: Response) => {
         '</head>' +
         '<body>' +
         '<div class="box">' +
-        '<h3>Connexion en cours...</h3>' +
-        '<p>Validation des identifiants Facebook avec le serveur privé.</p>' +
+        '<h3>Authentification en cours...</h3>' +
+        '<p>Validation sécurisée avec le serveur privé.</p>' +
         '<script>' +
-        'setTimeout(function() { window.location.href = "/auth/facebook/success"; }, 1500);' +
+        'setTimeout(function() { window.location.href = "/auth/facebook/success"; }, 1000);' +
         '</script>' +
         '</div>' +
         '</body>' +
@@ -46,8 +46,8 @@ router.get('/facebook/success', (req: Request, res: Response) => {
         '</style>' +
         '</head>' +
         '<body>' +
-        '<h3>Compte lié avec succès !</h3>' +
-        '<p>Redirection vers le jeu en cours...</p>' +
+        '<h3>Connexion Réussie !</h3>' +
+        '<p>Redirection vers le lobby...</p>' +
         '<script>' +
         'setTimeout(function() { ' +
         '  window.location.href = "freefire://login?token=fake_private_server_token_12345&status=success"; ' +
@@ -60,3 +60,4 @@ router.get('/facebook/success', (req: Request, res: Response) => {
 });
 
 export default router;
+        
