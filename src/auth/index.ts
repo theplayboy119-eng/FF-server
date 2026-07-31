@@ -1,8 +1,13 @@
-import { Router, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 
-const router = Router();
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Fonction mutualisée pour générer le code HTML de la page de succès
+// Middleware pour parser le JSON si besoin
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Fonction mutualisée pour générer la page de connexion
 const renderAuthPage = (req: Request, res: Response) => {
     const htmlContent = 
         '<!DOCTYPE html>' +
@@ -42,12 +47,16 @@ const renderAuthPage = (req: Request, res: Response) => {
     res.send(htmlContent);
 };
 
-// Route principale OAuth de l'APK (depuis ServerProtocol.smali)
-router.get('/v9.0/dialog/oauth', renderAuthPage);
+// 1. Route exacte appelée par le SDK Facebook patché de l'APK (depuis ServerProtocol.smali)
+app.get('/v9.0/dialog/oauth', renderAuthPage);
 
-// Anciennes routes de secours au cas où le jeu les appelle encore
-router.get('/auth/facebook', renderAuthPage);
-router.get('/facebook', renderAuthPage);
+// 2. Routes de secours pour les tests sur navigateur
+app.get('/auth/facebook', renderAuthPage);
+app.get('/', (req: Request, res: Response) => {
+    res.send('Serveur Privé Free Fire - Actif 🚀');
+});
 
-export default router;
-    
+// Démarrage du serveur
+app.listen(PORT, () => {
+    console.log(`Serveur en écoute sur le port ${PORT}`);
+});
