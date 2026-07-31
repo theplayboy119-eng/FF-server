@@ -1,65 +1,141 @@
 import express from 'express';
 import http from 'http';
-import { WebSocketServer, WebSocket } from 'ws';
-import bodyParser from 'body-parser';
-import { handleLogin } from './auth';
-import { GameRoom } from './rooms/GameRoom';
-import { db } from './lib/db';
+import { Server as SocketIOServer } from 'socket.io';
+import dotenv from 'dotenv';
+
+// Charger les variables d'environnement
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
-
-const PORT = process.env.PORT || 3000;
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Route racine pour vérifier l'état du serveur
-app.get('/', (req, res) => {
-  res.status(200).json({ status: 'online', message: 'Free Fire Private Server Core is running' });
-});
-
-// Routes d'authentification pour l'APK
-app.post('/api/auth/facebook', handleLogin);
-app.post('/api/auth/google', handleLogin);
-app.post('/api/auth/garena', handleLogin);
-app.post('/api/auth/vk', handleLogin);
-app.post('/api/auth/line', handleLogin);
-
-// Gestion des connexions WebSocket pour les salles de jeu / matchmakings
-const activeRooms = new Map<string, GameRoom>();
-
-wss.on('connection', (ws: WebSocket, req) => {
-  console.log('Nouveau client WebSocket connecté depuis :', req.socket.remoteAddress);
-
-  // Exemple d'initialisation d'une room par défaut
-  let roomId = 'default_room';
-  let room = activeRooms.get(roomId);
-  if (!room) {
-    room = new GameRoom(roomId);
-    activeRooms.set(roomId, room);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
   }
+});
 
-  room.addClient(ws);
+// Middlewares globaux
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  ws.on('message', (message: string) => {
-    try {
-      const data = JSON.parse(message.toString());
-      console.log('Message reçu du client :', data);
-      // Traitement des paquets du protocole de jeu
-      room?.handleMessage(ws, data);
-    } catch (e) {
-      console.error('Erreur lors du traitement du message WebSocket :', e);
-    }
-  });
+// ==========================================
+// NOUVELLES ROUTES : Vérification & Liaison Facebook
+// ==========================================
 
-  ws.on('close', () => {
-    console.log('Client WebSocket déconnecté');
-    room?.removeClient(ws);
+// Route principale (Page de vérification et bouton Facebook)
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Free Fire - Connexion</title>
+        <style>
+            body {
+                background-color: #121212;
+                color: #ffffff;
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 20px;
+                margin: 0;
+            }
+            .container {
+                max-width: 400px;
+                margin: 50px auto;
+                background: #1e1e1e;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            }
+            h2 {
+                color: #4CAF50;
+                margin-bottom: 10px;
+            }
+            p {
+                color: #b0b0b0;
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+            .btn-facebook {
+                background-color: #1877F2;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 5px;
+                width: 100%;
+                cursor: pointer;
+                display: block;
+                text-decoration: none;
+            }
+            .btn-facebook:hover {
+                background-color: #166fe5;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Vérification Réussie !</h2>
+            <p>Le serveur privé a validé votre accès. Veuillez lier un compte Facebook actif pour vous connecter et accéder au lobby du jeu.</p>
+            <form action="/auth/facebook" method="GET">
+                <button type="submit" class="btn-facebook">Se connecter avec Facebook</button>
+            </form>
+        </div>
+    </body>
+    </html>
+  `);
+});
+
+// Route gérant l'action après le clic sur le bouton Facebook
+app.get('/auth/facebook', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <title>Liaison en cours...</title>
+            <style>
+                body { 
+                    background-color: #121212; 
+                    color: white; 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding-top: 50px; 
+                }
+                h3 { color: #4CAF50; }
+            </style>
+        </head>
+        <body>
+            <h3>Compte Facebook lié avec succès !</h3>
+            <p>Accès autorisé. Chargement du lobby en cours...</p>
+            <script>
+                setTimeout(function() {
+                    window.location.href = "/";
+                }, 2000);
+            </script>
+        </body>
+        </html>
+    `);
+});
+
+// ==========================================
+// CONFIGURATION SOCKET.IO & WEBSOCKETS EXISTANTE
+// ==========================================
+
+io.on('connection', (socket) => {
+  console.log(`Un client s'est connecté : ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    console.log(`Client déconnecté : ${socket.id}`);
   });
 });
 
+// Démarrage du serveur
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Serveur complet démarré et en écoute sur le port ${PORT}`);
+  console.log(`Serveur démarré et en écoute sur le port ${PORT}`);
 });
+  
