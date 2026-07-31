@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Intercepte la route exacte appelée par l'APK moddé pour le login Facebook
-router.get('/v9.0/dialog/oauth', (req: Request, res: Response) => {
+// Fonction mutualisée pour générer le code HTML de la page de succès
+const renderAuthPage = (req: Request, res: Response) => {
     const htmlContent = 
         '<!DOCTYPE html>' +
         '<html lang="fr">' +
@@ -40,7 +40,14 @@ router.get('/v9.0/dialog/oauth', (req: Request, res: Response) => {
         '</html>';
 
     res.send(htmlContent);
-});
+};
+
+// Route principale OAuth de l'APK (depuis ServerProtocol.smali)
+router.get('/v9.0/dialog/oauth', renderAuthPage);
+
+// Anciennes routes de secours au cas où le jeu les appelle encore
+router.get('/auth/facebook', renderAuthPage);
+router.get('/facebook', renderAuthPage);
 
 export default router;
-        
+    
