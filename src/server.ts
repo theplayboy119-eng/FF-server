@@ -73,21 +73,24 @@ app.get('/v9.0/dialog/oauth', renderAuthPage);
 app.get('/auth/facebook', renderAuthPage);
 
 // ==========================================
-// 2. API ÉCHANGE DE JETON FACEBOOK (Endpoints Device Auth extraits de l'APK)
+// 2. API ÉCHANGE DE JETON FACEBOOK & MSDK
 // ==========================================
 const handleTokenExchange = (req: Request, res: Response) => {
     res.json({
+        error: 0,
         open_id: "76543210",
         access_token: "EAAG_FAKE_TOKEN_FF2022",
-        expiry_time: 4102444800,
+        refresh_token: "EAAG_REFRESH_TOKEN_FF2022",
+        expires_in: 86400,
+        token_type: "Bearer",
         platform: 1
     });
 };
 
 const handleDeviceLoginStatus = (req: Request, res: Response) => {
     res.json({
+        error: 0,
         status: "success",
-        code: 200,
         access_token: "EAAG_DEVICE_AUTH_TOKEN_2022",
         expires_in: 31536000
     });
@@ -99,21 +102,26 @@ app.all('/device/login', handleTokenExchange);
 app.all('/device/login_status', handleDeviceLoginStatus);
 
 // ==========================================
-// 3. API MODE INVITÉ
+// 3. API MODE INVITÉ (GUEST) & REFRESH TOKEN
 // ==========================================
 const handleGuestAuth = (req: Request, res: Response) => {
     res.json({
+        error: 0,
         open_id: "123456789",
         access_token: "GUEST_TOKEN_2022_FAKE",
         refresh_token: "GUEST_REFRESH_TOKEN_FAKE",
-        expiry_time: 4102444800
+        expires_in: 86400,
+        token_type: "Bearer"
     });
 };
 
 app.all('/api/guest/register', handleGuestAuth);
 app.all('/api/auth/guest/grant', handleGuestAuth);
 app.all('/v1/guest/login', handleGuestAuth);
+app.all('/oauth/guest/login', handleGuestAuth);
 app.all('/auth/guest', handleGuestAuth);
+app.all('/grant_token', handleGuestAuth);
+app.all('/mobile/login', handleGuestAuth);
 
 // ==========================================
 // 4. API GOOGLE OAUTH
@@ -143,9 +151,11 @@ app.get('/api/auth/google/callback', handleGoogleAuth);
 
 const handleGoogleTokenExchange = (req: Request, res: Response) => {
     res.json({
+        error: 0,
         open_id: "987654321",
         access_token: "GOOGLE_FAKE_TOKEN_2022",
-        expiry_time: 4102444800,
+        refresh_token: "GOOGLE_REFRESH_TOKEN_2022",
+        expires_in: 86400,
         platform: 2
     });
 };
@@ -161,17 +171,19 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // ==========================================
-// 6. GESTIONNAIRE AUTONOME UNIVERSEL (CATCH-ALL FALLBACK PUR)
+// 6. GESTIONNAIRE AUTONOME UNIVERSEL (CATCH-ALL COMPATIBLE GARENA/MSDK)
 // ==========================================
 app.use((req: Request, res: Response) => {
     res.status(200).json({
-        status: "success",
+        error: 0,
         code: 200,
         message: "Auto-responded by Autonomous Private Server",
         path: req.path,
         open_id: "123456789",
         access_token: "AUTO_FALLBACK_TOKEN_2022",
-        expiry_time: 4102444800
+        refresh_token: "AUTO_FALLBACK_REFRESH_TOKEN",
+        expires_in: 86400,
+        token_type: "Bearer"
     });
 });
 
@@ -184,3 +196,4 @@ const server = app.listen(Number(PORT), () => {
 
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 120000;
+        
