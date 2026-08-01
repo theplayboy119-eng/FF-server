@@ -2,48 +2,48 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
+// Middlewares basiques
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logueur de requêtes
+// Logueur global pour suivre toutes les requêtes en temps réel
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// 1. Interception de la boîte de dialogue OAuth (Facebook / Garena SDK)
+// 1. Route racine pour vérifier que le serveur tourne
+app.get('/', (req, res) => {
+  res.send('Serveur Privé Free Fire 2022 Actif !');
+});
+
+// 2. Interception OAuth (Facebook / Garena SDK) avec redirection HTTP 302 brute
 app.get(['/v9.0/dialog/oauth', '/dialog/oauth', '/oauth/authorize'], (req, res) => {
-  console.log("--> Tentative OAuth interceptée ! Redirection automatique vers l'APK...");
+  console.log("--> Interception OAuth ! Redirection HTTP 302 en cours...");
   
   const redirectUri = req.query.redirect_uri || 'fbconnect://success';
   const mockAccessToken = "EAAGm0PX4ZK4BAO1234567890abcdefghijklmnopqrstuvwxyz";
   
-  // Si le SDK attend une redirection deeplink dans la WebView
-  const targetUrl = `${redirectUri}#access_token=${mockAccessToken}&expires_in=5184000`;
+  // Format exact de retour attendu par le SDK
+  const targetUrl = `${redirectUri}#access_token=${mockAccessToken}&expires_in=5184000&data_access_expiration_time=1700000000`;
   
-  // On renvoie un petit script HTML qui force la redirection immédiate
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Authentification Réussie</title>
-      </head>
-      <body>
-        <h3>Connexion au Serveur Privé réussie ! Redirection...</h3>
-        <script>
-          window.location.href = "${targetUrl}";
-        </script>
-      </body>
-    </html>
-  `);
+  // Redirection HTTP 302 pour forcer la WebView Android à capturer le deeplink
+  return res.redirect(302, targetUrl);
 });
 
-// 2. Interception des requêtes d'API de jeton et profils
-app.all(['/oauth/token', '/oauth/login', '/api/v1/auth', '/user/login', '/v9.0/me'], (req, res) => {
-  console.log("--> Validation de session (Token API) !");
+// 3. Validation de session et échange de Jetons API
+app.all([
+  '/oauth/access_token',
+  '/oauth/login',
+  '/api/v1/auth',
+  '/user/login',
+  '/v9.0/me',
+  '/v9.0/oauth/access_token'
+], (req, res) => {
+  console.log("--> Validation de session API déclenchée !");
   res.status(200).json({
     error: 0,
     error_code: 0,
@@ -59,20 +59,17 @@ app.all(['/oauth/token', '/oauth/login', '/api/v1/auth', '/user/login', '/v9.0/m
   });
 });
 
-// Route racine
-app.get('/', (req, res) => {
-  res.send('Serveur Privé Free Fire 2022 Actif !');
-});
-
-// Attrape-tout pour repérer d'autres routes si besoin
+// 4. Route attrape-tout (Catch-all) pour intercepter et logger n'importe quelle autre route
 app.use((req, res) => {
   console.log("--> Route inconnue appelée :", req.url);
   res.status(200).json({
     error: 0,
-    status: "ok"
+    status: "ok",
+    message: "Route interceptee"
   });
 });
 
+// Démarrage du serveur
 app.listen(PORT, () => {
   console.log(`Serveur prêt sur le port ${PORT}`);
 });
