@@ -12,6 +12,9 @@ app.use(express.urlencoded({ extended: true }));
 // Logueur global pour suivre toutes les requêtes en temps réel
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  if (Object.keys(req.body).length > 0) {
+    console.log("Body:", JSON.stringify(req.body));
+  }
   next();
 });
 
@@ -34,10 +37,42 @@ app.get(['/v9.0/dialog/oauth', '/dialog/oauth', '/oauth/authorize'], (req, res) 
   return res.redirect(302, targetUrl);
 });
 
-// 3. Validation de session et échange de Jetons API
+// 3. Routes spécifiques d'échange de jetons du SDK Garena (SDKConstants)
+app.all([
+  '/oauth/token/facebook/exchange',
+  '/oauth/token/google/exchange',
+  '/oauth/token/line/exchange',
+  '/oauth/token/twitter/exchange',
+  '/oauth/token/vk/exchange/v2',
+  '/oauth/token/wechat/exchange',
+  '/oauth/token',
+  '/oauth/login'
+], (req, res) => {
+  console.log("--> Échange de jeton Garena SDK intercepté !");
+  res.status(200).json({
+    error: 0,
+    error_code: 0,
+    status: "success",
+    open_id: "88888888",
+    access_token: "ff2022_private_token_xyz987654321",
+    refresh_token: "ff2022_refresh_token_abc123456789",
+    expiry_time: 2147483647,
+    platform: 1
+  });
+});
+
+// 4. Validation de paiement (API_PAY_CHANNEL_SUCCESS_URL)
+app.all('/api/pay/channel/success', (req, res) => {
+  console.log("--> Validation de paiement interceptée !");
+  res.status(200).json({
+    status: 0,
+    message: "success"
+  });
+});
+
+// 5. Validation de session et échange de Jetons API généraux
 app.all([
   '/oauth/access_token',
-  '/oauth/login',
   '/api/v1/auth',
   '/user/login',
   '/v9.0/me',
@@ -59,7 +94,7 @@ app.all([
   });
 });
 
-// 4. Route attrape-tout (Catch-all) pour intercepter et logger n'importe quelle autre route
+// 6. Route attrape-tout (Catch-all) pour intercepter et logger n'importe quelle autre route
 app.use((req, res) => {
   console.log("--> Route inconnue appelée :", req.url);
   res.status(200).json({
